@@ -1,0 +1,6 @@
+{
+  "name": "Unified Operations Platform",
+  "description": "Advanced tactical operations dashboard and intelligence command center with real-time telemetry, identity fusion, and multi-device monitoring.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
