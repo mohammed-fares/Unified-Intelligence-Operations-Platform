@@ -23,14 +23,12 @@ interface DeviceFleetViewProps {
   activeTarget: TargetProfile;
   devices: DeviceInfo[];
   lang: Language;
-  onOpenXiaomiPairing?: () => void;
 }
 
 export const DeviceFleetView: React.FC<DeviceFleetViewProps> = ({
   activeTarget,
   devices,
   lang,
-  onOpenXiaomiPairing,
 }) => {
   const isAr = lang === 'ar';
   const [deviceList, setDeviceList] = useState<DeviceInfo[]>(devices);
@@ -93,16 +91,6 @@ export const DeviceFleetView: React.FC<DeviceFleetViewProps> = ({
         </div>
 
         <div className="flex flex-wrap items-center gap-2">
-          {onOpenXiaomiPairing && (
-            <button
-              onClick={onOpenXiaomiPairing}
-              className="px-3 py-1.5 bg-cyan-950/80 hover:bg-cyan-900/60 text-cyan-300 border border-cyan-500/60 hover:border-cyan-400 rounded-lg text-xs font-mono font-bold flex items-center gap-1.5 transition-all shadow-[0_0_10px_rgba(6,182,212,0.2)]"
-            >
-              <Smartphone className="w-3.5 h-3.5 text-cyan-400 animate-pulse" />
-              <span>{isAr ? 'ربط هاتف شاومي A3 عملياً' : 'Pair Xiaomi Mi A3'}</span>
-            </button>
-          )}
-
           <span className="text-xs font-mono text-cyan-300 bg-slate-900 border border-slate-800 px-3 py-1.5 rounded">
             TARGET: {activeTarget.codeName} (#{activeTarget.id})
           </span>

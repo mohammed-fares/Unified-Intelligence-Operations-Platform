@@ -28,7 +28,6 @@ interface HeaderProps {
   setSoundEnabled: (enabled: boolean) => void;
   onOpenFusion: () => void;
   onOpenDevices: () => void;
-  onOpenXiaomiPairing?: () => void;
   activeTargetCodeName?: string;
 }
 
@@ -41,7 +40,6 @@ export const Header: React.FC<HeaderProps> = ({
   setSoundEnabled,
   onOpenFusion,
   onOpenDevices,
-  onOpenXiaomiPairing,
   activeTargetCodeName = 'VIPER-09',
 }) => {
   const isAr = lang === 'ar';
@@ -114,16 +112,6 @@ export const Header: React.FC<HeaderProps> = ({
         })}
 
         <div className="h-5 w-[1px] bg-slate-800 shrink-0 mx-0.5"></div>
-
-        {onOpenXiaomiPairing && (
-          <button
-            onClick={onOpenXiaomiPairing}
-            className="px-2.5 py-1.5 rounded text-[11px] font-mono border bg-cyan-950/60 text-cyan-300 border-cyan-500/50 hover:bg-cyan-500/20 hover:border-cyan-400 transition-all flex items-center gap-1.5 whitespace-nowrap shrink-0 shadow-[0_0_10px_rgba(6,182,212,0.2)]"
-          >
-            <Smartphone className="w-3.5 h-3.5 text-cyan-400 animate-pulse" />
-            <span className="font-bold">{isAr ? 'ربط هاتف شاومي A3' : 'Pair Xiaomi A3'}</span>
-          </button>
-        )}
 
         <button
           onClick={onOpenFusion}
