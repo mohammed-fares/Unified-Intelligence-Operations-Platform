@@ -39,6 +39,7 @@ interface TargetDirectoryViewProps {
   onOpenFusionModal: (target: TargetProfile) => void;
   onOpenDevicesModal: (target: TargetProfile) => void;
   onAddNewTarget?: (newTarget: TargetProfile) => void;
+  onOpenXiaomiPairing?: () => void;
 }
 
 export const TargetDirectoryView: React.FC<TargetDirectoryViewProps> = ({
@@ -49,6 +50,7 @@ export const TargetDirectoryView: React.FC<TargetDirectoryViewProps> = ({
   onOpenFusionModal,
   onOpenDevicesModal,
   onAddNewTarget,
+  onOpenXiaomiPairing,
 }) => {
   const isAr = lang === 'ar';
   const [searchTerm, setSearchTerm] = useState('');
@@ -246,7 +248,17 @@ export const TargetDirectoryView: React.FC<TargetDirectoryViewProps> = ({
           </div>
 
           {/* Quick Action Button */}
-          <div className="flex items-center gap-2.5">
+          <div className="flex flex-wrap items-center gap-2.5">
+            {onOpenXiaomiPairing && (
+              <button
+                onClick={onOpenXiaomiPairing}
+                className="px-3.5 py-2 rounded-lg bg-cyan-950/80 hover:bg-cyan-900/60 text-cyan-300 border border-cyan-500/60 hover:border-cyan-400 font-bold font-mono text-xs flex items-center gap-2 transition-all shadow-[0_0_15px_rgba(6,182,212,0.25)]"
+              >
+                <Smartphone className="w-4 h-4 text-cyan-400 animate-pulse" />
+                <span>{isAr ? 'ربط هاتف شاومي A3 عملياً' : 'Pair Xiaomi Mi A3'}</span>
+              </button>
+            )}
+
             <button
               onClick={() => setShowAddModal(true)}
               className="px-3.5 py-2 rounded-lg bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-bold font-mono text-xs flex items-center gap-2 transition-all shadow-[0_0_15px_rgba(6,182,212,0.4)]"

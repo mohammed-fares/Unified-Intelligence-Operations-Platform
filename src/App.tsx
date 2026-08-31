@@ -17,6 +17,7 @@ import { ControlTerminal } from './components/ControlTerminal';
 import { BehavioralAnalytics } from './components/BehavioralAnalytics';
 import { IdentityFusionModal } from './components/IdentityFusionModal';
 import { DeviceFleetModal } from './components/DeviceFleetModal';
+import { XiaomiDevicePairingModal } from './components/XiaomiDevicePairingModal';
 import { TargetSidebar } from './components/TargetSidebar';
 import { DataFlowDiagramView } from './components/DataFlowDiagramView';
 import { DatabaseSchemaView } from './components/DatabaseSchemaView';
@@ -32,29 +33,74 @@ export default function App() {
   const [activeTab, setActiveTab] = useState<TabType>('targets');
   const [soundEnabled, setSoundEnabled] = useState<boolean>(true);
   const [targetsList, setTargetsList] = useState<TargetProfile[]>(mockTargets);
-  const [activeTargetId, setActiveTargetId] = useState<string>('0912');
-  const [activeDeviceId, setActiveDeviceId] = useState<string>('dev-01');
+  const [devicesList, setDevicesList] = useState<DeviceInfo[]>(mockDevices);
+  const [activeTargetId, setActiveTargetId] = useState<string>('0103');
+  const [activeDeviceId, setActiveDeviceId] = useState<string>('dev-xiaomi-a3');
   const [showFusionModal, setShowFusionModal] = useState<boolean>(false);
   const [showDevicesModal, setShowDevicesModal] = useState<boolean>(false);
+  const [showXiaomiPairingModal, setShowXiaomiPairingModal] = useState<boolean>(false);
   const [intelFeed, setIntelFeed] = useState<IntelFeedItem[]>(mockIntelFeed);
 
   const activeTarget: TargetProfile =
     targetsList.find((t) => t.id === activeTargetId) || targetsList[0] || mockTarget;
 
-  // Find target-specific devices or fallback to all mockDevices
-  const targetDevices = mockDevices.filter((d) => d.targetId === activeTarget.id);
-  const effectiveDevices = targetDevices.length > 0 ? targetDevices : mockDevices;
+  // Find target-specific devices or fallback to all devicesList
+  const targetDevices = devicesList.filter((d) => d.targetId === activeTarget.id);
+  const effectiveDevices = targetDevices.length > 0 ? targetDevices : devicesList;
 
   const activeDevice =
-    effectiveDevices.find((d) => d.id === activeDeviceId) || effectiveDevices[0] || mockDevices[0];
+    effectiveDevices.find((d) => d.id === activeDeviceId) || effectiveDevices[0] || devicesList[0];
 
   const handleSelectTargetAndNavigate = (targetId: string, targetTab: TabType = 'operations') => {
     setActiveTargetId(targetId);
-    const targetFirstDev = mockDevices.find((d) => d.targetId === targetId);
+    const targetFirstDev = devicesList.find((d) => d.targetId === targetId);
     if (targetFirstDev) {
       setActiveDeviceId(targetFirstDev.id);
     }
     setActiveTab(targetTab);
+  };
+
+  const handleConfirmXiaomiPairing = (pairedDevice: DeviceInfo, pairedTarget?: TargetProfile) => {
+    // 1. Update or Add device in devicesList
+    setDevicesList((prev) => {
+      const exists = prev.some((d) => d.id === pairedDevice.id);
+      if (exists) {
+        return prev.map((d) => (d.id === pairedDevice.id ? pairedDevice : d));
+      }
+      return [pairedDevice, ...prev];
+    });
+
+    // 2. Add or update Target if provided
+    if (pairedTarget) {
+      setTargetsList((prev) => {
+        const exists = prev.some((t) => t.id === pairedTarget.id);
+        if (exists) {
+          return prev.map((t) => (t.id === pairedTarget.id ? pairedTarget : t));
+        }
+        return [pairedTarget, ...prev];
+      });
+      setActiveTargetId(pairedTarget.id);
+    }
+
+    // 3. Set Active Device & Switch to Operations
+    setActiveDeviceId(pairedDevice.id);
+    setActiveTab('operations');
+
+    // 4. Add Intel Log Item
+    const intelItem: IntelFeedItem = {
+      id: `intel-xiaomi-${Date.now()}`,
+      targetId: pairedTarget ? pairedTarget.id : activeTarget.id,
+      timestamp: new Date().toTimeString().split(' ')[0],
+      type: 'DEVICE_EVENT',
+      titleEn: 'XIAOMI MI A3 HARDWARE TELEMETRY PAIRED',
+      titleAr: 'تم إقران وتفعيل مستشعرات هاتف شاومي A3 بنجاح',
+      contentEn: `Zero-Trust link online. Live sensors active with Snapdragon 665 & 48MP AI camera stream.`,
+      contentAr: `رابط الأمان Zero-Trust متصل. المستشعرات الحية نشطة مع معالج Snapdragon 665 وكاميرا 48 ميجابكسل.`,
+      severity: 'info',
+      deviceId: pairedDevice.id,
+      tag: 'XIAOMI-A3',
+    };
+    setIntelFeed((prev) => [intelItem, ...prev]);
   };
 
   const isAr = lang === 'ar';
@@ -82,6 +128,7 @@ export default function App() {
         setSoundEnabled={setSoundEnabled}
         onOpenFusion={() => setShowFusionModal(true)}
         onOpenDevices={() => setShowDevicesModal(true)}
+        onOpenXiaomiPairing={() => setShowXiaomiPairingModal(true)}
         activeTargetCodeName={activeTarget.codeName}
       />
 
@@ -91,7 +138,7 @@ export default function App() {
         {activeTab === 'targets' && (
           <TargetDirectoryView
             targets={targetsList}
-            devices={mockDevices}
+            devices={devicesList}
             lang={lang}
             onSelectTargetAndNavigate={handleSelectTargetAndNavigate}
             onOpenFusionModal={(t) => {
@@ -102,6 +149,7 @@ export default function App() {
               setActiveTargetId(t.id);
               setShowDevicesModal(true);
             }}
+            onOpenXiaomiPairing={() => setShowXiaomiPairingModal(true)}
             onAddNewTarget={(newT) => {
               setTargetsList((prev) => [newT, ...prev]);
             }}
@@ -113,14 +161,14 @@ export default function App() {
           <TargetContextBar
             activeTarget={activeTarget}
             targets={targetsList}
-            devices={mockDevices}
+            devices={devicesList}
             lang={lang}
             activeTab={activeTab}
             setActiveTab={setActiveTab}
             onBackToDirectory={() => setActiveTab('targets')}
             onSwitchTarget={(id) => {
               setActiveTargetId(id);
-              const tDev = mockDevices.find((d) => d.targetId === id);
+              const tDev = devicesList.find((d) => d.targetId === id);
               if (tDev) setActiveDeviceId(tDev.id);
             }}
             onOpenFusion={() => setShowFusionModal(true)}
@@ -230,6 +278,7 @@ export default function App() {
             activeTarget={activeTarget}
             devices={effectiveDevices}
             lang={lang}
+            onOpenXiaomiPairing={() => setShowXiaomiPairingModal(true)}
           />
         )}
       </main>
@@ -253,6 +302,15 @@ export default function App() {
           activeDeviceId={activeDeviceId}
           onSelectDevice={(id) => setActiveDeviceId(id)}
           onClose={() => setShowDevicesModal(false)}
+        />
+      )}
+
+      {showXiaomiPairingModal && (
+        <XiaomiDevicePairingModal
+          lang={lang}
+          currentTarget={activeTarget}
+          onClose={() => setShowXiaomiPairingModal(false)}
+          onConfirmPairing={handleConfirmXiaomiPairing}
         />
       )}
     </div>

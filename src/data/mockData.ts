@@ -222,11 +222,67 @@ export const mockTargets: TargetProfile[] = [
       },
     ],
   },
+  {
+    id: '0103',
+    codeName: 'XIAOMI-A3',
+    fullNameEn: 'Xiaomi Mi A3 (User Device)',
+    fullNameAr: 'هاتف شاومي A3 (الهدف الميداني)',
+    dob: '15/07/1990',
+    nationalityEn: 'Field Operative / Xiaomi Device',
+    nationalityAr: 'مشغل ميداني / هاتف شاومي',
+    passportId: 'XM9901823',
+    nationalId: '784-1990-882910-5',
+    permanentAddressEn: 'Connected Android Node, laurel_sprout',
+    permanentAddressAr: 'عقدة أندرويد متصلة، شاومي A3',
+    occupationEn: 'Active Tactical Endpoint',
+    occupationAr: 'نقطة نهاية تكتيكية نشطة',
+    fusionScore: 99.2,
+    riskLevel: 'CRITICAL',
+    status: 'ACTIVE_MONITORING',
+    devicesCount: 1,
+    lastSync: 'Live (0s ago)',
+    familyNetwork: [
+      { relationEn: 'Paired Node', relationAr: 'عقدة مقترنة', name: 'Xiaomi C2 Gateway', phone: '+971 55 990 0112' },
+    ],
+    socialProfiles: [
+      { platform: 'Telegram', handle: '@xiaomi_a3_node', status: 'Monitored' },
+      { platform: 'Signal', handle: '+971559900112', status: 'Monitored' },
+    ],
+    aiInsights: [
+      {
+        id: 'ins-07',
+        titleEn: 'Xiaomi Mi A3 Telemetry Link Established',
+        titleAr: 'تم إنشاء رابط القياس عن بعد لهاتف شاومي A3',
+        summaryEn: 'Full Snapdragon 665 sensor suite & 48MP camera relay active via Zero-Trust TLS 1.3.',
+        summaryAr: 'مستشعرات Snapdragon 665 وكاميرا 48 ميجابكسل متصلة عبر بروتوكول TLS 1.3 الآمن.',
+        confidence: 99,
+        severity: 'info',
+        timestamp: 'Live Now',
+      },
+    ],
+  },
 ];
 
 export const mockTarget: TargetProfile = mockTargets[0];
 
 export const mockDevices: DeviceInfo[] = [
+  {
+    id: 'dev-xiaomi-a3',
+    targetId: '0103',
+    name: 'XIAOMI_MI_A3_AGENT',
+    type: 'android',
+    uuid: 'xiaomi-a3-laurel-sprout-48mp-8899',
+    battery: 88,
+    signalStrength: 96,
+    status: 'online',
+    lastSeen: 'Live (0s)',
+    ip: '192.168.1.108',
+    network: '4G LTE / WiFi (Xiaomi_Mesh)',
+    coords: { lat: 25.1972, lng: 55.2744, altitude: 35, speed: 0 },
+    cameraAvailable: ['front', 'rear'],
+    activeCamera: 'rear',
+    permissions: { location: true, camera: true, audio: true, telemetry: true, files: true, keylogger: true },
+  },
   {
     id: 'dev-01',
     targetId: '0912',

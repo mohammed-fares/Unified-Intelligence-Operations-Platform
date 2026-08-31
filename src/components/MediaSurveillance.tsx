@@ -1,6 +1,6 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { DeviceInfo, Language } from '../types';
-import { Camera, Mic, Volume2, Radio, Sliders, RefreshCw, Eye, Sparkles, AlertCircle } from 'lucide-react';
+import { Camera, Mic, Volume2, Radio, Sliders, RefreshCw, Eye, Sparkles, AlertCircle, Video, VideoOff } from 'lucide-react';
 
 interface MediaSurveillanceProps {
   device: DeviceInfo;
@@ -11,12 +11,16 @@ export const MediaSurveillance: React.FC<MediaSurveillanceProps> = ({ device, la
   const isAr = lang === 'ar';
   const [activeCam, setActiveCam] = useState<'front' | 'rear' | 'integrated'>(device.activeCamera);
   const [isLiveCam, setIsLiveCam] = useState<boolean>(true);
+  const [isRealWebcam, setIsRealWebcam] = useState<boolean>(false);
   const [snapshotFlash, setSnapshotFlash] = useState<boolean>(false);
   const [isPushingTalk, setIsPushingTalk] = useState<boolean>(false);
   const [pttMode, setPttMode] = useState<'hold' | 'toggle'>('toggle');
   const [voiceProfile, setVoiceProfile] = useState<'clean' | 'synthetic' | 'morph'>('clean');
   const [audioGain, setAudioGain] = useState<number>(12);
   const [frequencies, setFrequencies] = useState<number[]>([20, 45, 90, 60, 30, 55, 10, 75, 40, 85, 25, 65]);
+
+  const videoElementRef = useRef<HTMLVideoElement | null>(null);
+  const streamRef = useRef<MediaStream | null>(null);
 
   // Animated Audio Equalizer Bars
   useEffect(() => {
@@ -26,6 +30,42 @@ export const MediaSurveillance: React.FC<MediaSurveillanceProps> = ({ device, la
       );
     }, 200);
     return () => clearInterval(interval);
+  }, []);
+
+  const toggleRealCamera = async () => {
+    if (isRealWebcam) {
+      if (streamRef.current) {
+        streamRef.current.getTracks().forEach((track) => track.stop());
+        streamRef.current = null;
+      }
+      setIsRealWebcam(false);
+    } else {
+      try {
+        const stream = await navigator.mediaDevices.getUserMedia({
+          video: {
+            facingMode: activeCam === 'front' ? 'user' : 'environment',
+          },
+          audio: false,
+        });
+        streamRef.current = stream;
+        if (videoElementRef.current) {
+          videoElementRef.current.srcObject = stream;
+          videoElementRef.current.play().catch(() => {});
+        }
+        setIsRealWebcam(true);
+      } catch (e) {
+        console.warn('Real camera not accessible:', e);
+        setIsRealWebcam(false);
+      }
+    }
+  };
+
+  useEffect(() => {
+    return () => {
+      if (streamRef.current) {
+        streamRef.current.getTracks().forEach((track) => track.stop());
+      }
+    };
   }, []);
 
   const triggerSnapshot = () => {
@@ -46,31 +86,57 @@ export const MediaSurveillance: React.FC<MediaSurveillanceProps> = ({ device, la
             </span>
           </div>
 
-          {/* Camera Switcher (Front/Rear if available) */}
-          {device.cameraAvailable.length > 1 && (
-            <div className="flex gap-1">
-              <button
-                onClick={() => setActiveCam('front')}
-                className={`px-1.5 py-0.5 rounded text-[8px] font-mono transition-colors ${
-                  activeCam === 'front'
-                    ? 'bg-cyan-500/30 text-cyan-300 border border-cyan-500/50'
-                    : 'bg-slate-900 text-slate-500'
-                }`}
-              >
-                FRONT
-              </button>
-              <button
-                onClick={() => setActiveCam('rear')}
-                className={`px-1.5 py-0.5 rounded text-[8px] font-mono transition-colors ${
-                  activeCam === 'rear'
-                    ? 'bg-cyan-500/30 text-cyan-300 border border-cyan-500/50'
-                    : 'bg-slate-900 text-slate-500'
-                }`}
-              >
-                REAR
-              </button>
-            </div>
-          )}
+          <div className="flex items-center gap-1">
+            {/* Real Web Camera Toggle */}
+            <button
+              onClick={toggleRealCamera}
+              title={isRealWebcam ? 'Switch to Tactical Feed' : 'Connect Real Device Camera'}
+              className={`px-1.5 py-0.5 rounded text-[8px] font-mono transition-colors flex items-center gap-1 ${
+                isRealWebcam
+                  ? 'bg-emerald-500/30 text-emerald-300 border border-emerald-500/50 animate-pulse'
+                  : 'bg-slate-900 text-slate-400 hover:text-cyan-300'
+              }`}
+            >
+              {isRealWebcam ? <Video className="w-2.5 h-2.5" /> : <VideoOff className="w-2.5 h-2.5" />}
+              <span>{isRealWebcam ? (isAr ? 'كاميرا حية' : 'REAL') : (isAr ? 'ربط الحقيقية' : 'SIM')}</span>
+            </button>
+
+            {/* Camera Switcher (Front/Rear if available) */}
+            {device.cameraAvailable.length > 1 && (
+              <div className="flex gap-1">
+                <button
+                  onClick={() => {
+                    setActiveCam('front');
+                    if (isRealWebcam) {
+                      setTimeout(toggleRealCamera, 50);
+                    }
+                  }}
+                  className={`px-1.5 py-0.5 rounded text-[8px] font-mono transition-colors ${
+                    activeCam === 'front'
+                      ? 'bg-cyan-500/30 text-cyan-300 border border-cyan-500/50'
+                      : 'bg-slate-900 text-slate-500'
+                  }`}
+                >
+                  FRONT
+                </button>
+                <button
+                  onClick={() => {
+                    setActiveCam('rear');
+                    if (isRealWebcam) {
+                      setTimeout(toggleRealCamera, 50);
+                    }
+                  }}
+                  className={`px-1.5 py-0.5 rounded text-[8px] font-mono transition-colors ${
+                    activeCam === 'rear'
+                      ? 'bg-cyan-500/30 text-cyan-300 border border-cyan-500/50'
+                      : 'bg-slate-900 text-slate-500'
+                  }`}
+                >
+                  REAR
+                </button>
+              </div>
+            )}
+          </div>
         </div>
 
         {/* Video Canvas Container */}
@@ -80,21 +146,32 @@ export const MediaSurveillance: React.FC<MediaSurveillanceProps> = ({ device, la
             <div className="absolute inset-0 bg-white z-30 animate-out fade-out duration-300"></div>
           )}
 
-          {/* Simulated Active Video Feed */}
-          {isLiveCam ? (
+          {/* Real Web Camera Output */}
+          <video
+            ref={videoElementRef}
+            autoPlay
+            playsInline
+            muted
+            className={`w-full h-full object-cover absolute inset-0 ${isRealWebcam ? 'block' : 'hidden'}`}
+          />
+
+          {/* Simulated Active Video Feed if not real webcam */}
+          {!isRealWebcam && isLiveCam && (
             <div className="relative w-full h-full flex flex-col items-center justify-center p-2 bg-[radial-gradient(#1e293b_1px,transparent_1px)] [background-size:12px_12px]">
               {/* Overlay Holographic Grid */}
               <div className="w-12 h-12 border border-cyan-500/40 rounded flex items-center justify-center">
                 <div className="w-2 h-2 rounded-full bg-cyan-400 animate-pulse"></div>
               </div>
               <div className="mt-1 text-[8px] font-mono text-cyan-400/80 uppercase tracking-wider">
-                WEBRTC: 1080P @ 30FPS
+                {device.name.includes('XIAOMI') ? 'XIAOMI 48MP AI FEED • 1080P' : 'WEBRTC: 1080P @ 30FPS'}
               </div>
               <div className="absolute bottom-1.5 left-2 text-[8px] font-mono text-slate-500">
-                BITRATE: 2.4 Mb/s
+                BITRATE: 2.8 Mb/s
               </div>
             </div>
-          ) : (
+          )}
+
+          {!isRealWebcam && !isLiveCam && (
             <div className="text-[10px] text-slate-600 font-mono flex flex-col items-center gap-1">
               <Eye className="w-4 h-4 text-slate-700" />
               <span>SIGNAL_PAUSED</span>
@@ -111,7 +188,7 @@ export const MediaSurveillance: React.FC<MediaSurveillanceProps> = ({ device, la
           <button
             onClick={triggerSnapshot}
             title="Capture Snapshot"
-            className="absolute bottom-1.5 right-1.5 p-1 bg-slate-900/80 hover:bg-cyan-500/20 text-slate-300 hover:text-cyan-300 rounded border border-slate-700 transition-colors"
+            className="absolute bottom-1.5 right-1.5 p-1 bg-slate-900/80 hover:bg-cyan-500/20 text-slate-300 hover:text-cyan-300 rounded border border-slate-700 transition-colors z-20"
           >
             <Camera className="w-3 h-3" />
           </button>

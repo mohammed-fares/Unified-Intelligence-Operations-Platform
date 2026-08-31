@@ -85,7 +85,7 @@ export interface IntelFeedItem {
   id: string;
   targetId: string;
   timestamp: string;
-  type: 'SMS' | 'GEO_FENCE' | 'KEYLOG' | 'CALL' | 'APP_USAGE' | 'BROWSER' | 'FILE';
+  type: 'SMS' | 'GEO_FENCE' | 'KEYLOG' | 'CALL' | 'APP_USAGE' | 'BROWSER' | 'FILE' | 'DEVICE_EVENT';
   titleEn: string;
   titleAr: string;
   contentEn: string;
